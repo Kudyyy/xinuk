@@ -4,7 +4,7 @@ import java.awt.Color
 
 import com.typesafe.scalalogging.LazyLogging
 import pl.edu.agh.mock.algorithm.MockMovesController
-import pl.edu.agh.mock.model.MockCell
+import pl.edu.agh.mock.model.{EscapeCell, MockCell}
 import pl.edu.agh.mock.model.parallel.MockConflictResolver
 import pl.edu.agh.xinuk.Simulation
 import pl.edu.agh.xinuk.model.{DefaultSmellPropagation, Obstacle, SmellingCell}
@@ -15,14 +15,12 @@ object MockMain extends LazyLogging {
 
   def main(args: Array[String]): Unit = {
     import pl.edu.agh.xinuk.config.ValueReaders._
-    new Simulation(
-      configPrefix,
-      metricHeaders,
-      MockConflictResolver,
+    new Simulation(configPrefix, metricHeaders, MockConflictResolver,
       DefaultSmellPropagation.calculateSmellAddendsStandard)(new MockMovesController(_)(_),
       {
-        case MockCell(_) => Color.WHITE
-        case Obstacle => Color.BLUE
+        case MockCell(_) => Color.BLUE
+        case EscapeCell(_) => Color.WHITE
+        case Obstacle => Color.BLACK
         case cell: SmellingCell => cellToColorRegions(cell)
       }).start()
   }

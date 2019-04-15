@@ -16,5 +16,10 @@ final case class MockConfig(
                              signalSpeedRatio: Int,
                              iterationsNumber: Long,
 
-                             mockInitialSignal: Signal
+                             mockInitialSignal: Signal,
+                             escapeInitialSignal: Signal,
+
+                             obstacleSpawnChance: Double,
+                             escapeSpawnChance: Double,
+                             waterSpawnChance: Double
                            ) extends XinukConfig

@@ -18,9 +18,6 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
 
   override def initialGrid: (Grid, WaterMetrics) = {
     val grid = Grid.empty(bufferZone)
-    var humanCount = 0L
-    var fireCount = 0L
-    var escapesCount = 0L
     var spawnedEs = false
     var spawnedFi = false
     for {
@@ -32,24 +29,21 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
         grid.cells(x)(y) =
           random.nextInt(3) match {
             case 0 =>
-              if (random.nextDouble() < config.humanSpawnChance) {
-                humanCount += 1
-                val speed = random.nextInt(config.humanMaxSpeed) + 1
-                HumanAccessible.unapply(EmptyCell.Instance).withHuman(List.empty, speed)
+              if (random.nextDouble() < config.waterSpawnChance) {
+                val speed = random.nextInt(config.waterMaxSpeed) + 1
+                WaterAccessible.unapply(EmptyCell.Instance).withHuman(List.empty, speed)
               } else {
                 grid.cells(x)(y)
               }
             case 1 =>
-              if (random.nextDouble() < config.escapeSpawnChance && !spawnedEs) {
-                escapesCount += 1
+              if (random.nextDouble() < config.outflowSpawnChance && !spawnedEs) {
                 spawnedEs = true
-                EscapeAccessible.unapply(EmptyCell.Instance).withEscape()
+                OutflowAccessible.unapply(EmptyCell.Instance).withEscape()
               } else {
                 grid.cells(x)(y)
               }
             case 2 =>
               if (random.nextDouble() < config.cannonSpawnChance && !spawnedFi) {
-                fireCount += 1
                 spawnedFi = true
                 CannonAccessible.unapply(EmptyCell.Instance).withCannon()
               } else {
@@ -58,13 +52,11 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
           }
       }
     }
-
-    val metrics = WaterMetrics(humanCount, fireCount, escapesCount, 0, 0)
-    (grid, metrics)
+    (grid, WaterMetrics.empty())
   }
 
 
-  def calculatePossibleDestinations(cell: HumanCell, x: Int, y: Int, grid: Grid): Iterator[(Int, Int, GridPart)] = {
+  def calculatePossibleDestinations(cell: WaterCell, x: Int, y: Int, grid: Grid): Iterator[(Int, Int, GridPart)] = {
     val neighbourCellCoordinates = Grid.neighbourCellCoordinates(x, y)
     Grid.SubcellCoordinates
       .map {
@@ -86,19 +78,13 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
         case (i, j, current) => (i, j, current, newGrid.cells(i)(j))
       }
       .collectFirstOpt {
-        case (i, j, currentCell@HumanAccessible(_), HumanAccessible(_)) =>
+        case (i, j, currentCell@WaterAccessible(_), WaterAccessible(_)) =>
           (i, j, currentCell)
       }
   }
 
   override def makeMoves(iteration: Long, grid: Grid): (Grid, WaterMetrics) = {
     val newGrid = Grid.empty(bufferZone)
-
-    var humanCount = 0L
-    var fireCount = 0L
-    var escapesCount = 0L
-    var peopleDeaths = 0L
-    var peopleEscaped = 0L
 
     def isEmptyIn(grid: Grid)(i: Int, j: Int): Boolean = {
       grid.cells(i)(j) match {
@@ -113,18 +99,18 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
           newGrid.cells(x)(y) = Obstacle
         case cell@(EmptyCell(_) | BufferCell(_)) =>
           if (isEmptyIn(newGrid)(x, y)) {
-            if (Random.nextDouble() < 0.001) newGrid.cells(x)(y) = HumanAccessible.unapply(EmptyCell.Instance).withHuman(List.empty, random.nextInt(config.humanMaxSpeed) + 1)
+            if (Random.nextDouble() < 0.001) newGrid.cells(x)(y) = WaterAccessible.unapply(EmptyCell.Instance).withHuman(List.empty, random.nextInt(config.waterMaxSpeed) + 1)
             else newGrid.cells(x)(y) = cell
           }
-        case EscapeCell(_) =>
+        case OutflowCell(_) =>
           if (isEmptyIn(newGrid)(x, y)) {
-            newGrid.cells(x)(y) = EscapeAccessible.unapply(EmptyCell.Instance).withEscape()
+            newGrid.cells(x)(y) = OutflowAccessible.unapply(EmptyCell.Instance).withEscape()
           }
         case CannonCell(_) =>
           if (isEmptyIn(newGrid)(x, y)) {
             newGrid.cells(x)(y) = CannonAccessible.unapply(EmptyCell.Instance).withCannon()
           }
-        case cell: HumanCell =>
+        case cell: WaterCell =>
           if (Random.nextDouble() < 0.01) {
             newGrid.cells(x)(y) = EmptyCell(cell.smell)
           }
@@ -140,22 +126,18 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
       }
     }
 
-    def stayInPlace(cell: HumanCell, x: Int, y: Int): Unit = {
+    def stayInPlace(cell: WaterCell, x: Int, y: Int): Unit = {
       newGrid.cells(x)(y) = cell.copy(cell.smell, cell.crowd, cell.speed)
       grid.cells(x)(y)
     }
 
-    def moveHuman(cell: HumanCell, x: Int, y: Int): Unit = {
+    def moveHuman(cell: WaterCell, x: Int, y: Int): Unit = {
       val destinations = calculatePossibleDestinations(cell, x, y, grid)
       val destination = selectDestinationCell(destinations, newGrid)
       if (cell.crowd.isEmpty) {
         destination match {
-          case Opt((i, j, HumanAccessible(destination))) =>
-            newGrid.cells(i)(j) = destination.withHuman(cell.crowd, cell.speed)
-            newGrid.cells(i)(j) match {
-              case EscapeCell(_) | CannonCell(_) => peopleEscaped += 1
-              case _ =>
-            }
+          case Opt((i, j, WaterAccessible(dst))) =>
+            newGrid.cells(i)(j) = dst.withHuman(cell.crowd, cell.speed)
           case Opt((i, j, inaccessibleDestination)) =>
             throw new RuntimeException(s"Human selected inaccessible destination ($i,$j): $inaccessibleDestination")
           case Opt.Empty =>
@@ -163,8 +145,8 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
         }
       } else {
         destination match {
-          case Opt((i, j, HumanAccessible(destination))) =>
-            newGrid.cells(i)(j) = destination.withHuman(cell.crowd.head.crowd, cell.crowd.head.speed)
+          case Opt((i, j, WaterAccessible(dst))) =>
+            newGrid.cells(i)(j) = dst.withHuman(cell.crowd.head.crowd, cell.crowd.head.speed)
             newGrid.cells(x)(y) = cell.copy(cell.smellWithoutArray(cell.crowd.head.smell), cell.crowd.drop(1), cell.speed)
           case Opt((i, j, inaccessibleDestination)) =>
             throw new RuntimeException(s"Human selected inaccessible destination ($i,$j): $inaccessibleDestination")
@@ -178,24 +160,8 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
     for {
       x <- 0 until config.gridSize
       y <- 0 until config.gridSize
-    } {
-      grid.cells(x)(y) match {
-        case HumanCell(_, crowd, _) =>
-          humanCount += 1 + crowd.size
-        case CannonCell(_) =>
-          fireCount += 1
-        case EscapeCell(_) =>
-          escapesCount += 1
-        case _ =>
-      }
-    }
-
-    for {
-      x <- 0 until config.gridSize
-      y <- 0 until config.gridSize
     } makeMove(x, y)
 
-    val metrics = WaterMetrics(humanCount, fireCount, escapesCount, peopleDeaths, peopleEscaped)
-    (newGrid, metrics)
+    (newGrid, WaterMetrics.empty())
   }
 }

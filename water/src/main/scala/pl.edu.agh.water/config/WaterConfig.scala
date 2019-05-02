@@ -4,19 +4,17 @@ import pl.edu.agh.xinuk.config.{GuiType, XinukConfig}
 import pl.edu.agh.xinuk.model.Signal
 
 final case class WaterConfig(
-
-                               humanMaxSpeed: Int,
-                               fireSpeadingFrequency: Int,
+                               waterMaxSpeed: Int,
                                signalSpeedRatio: Int,
                                signalSuppressionFactor: Double,
                                signalAttenuationFactor: Double,
                                gridSize: Int,
                                spawnChance: Double,
-                               humanSpawnChance: Double,
-                               escapeSpawnChance: Double,
+                               waterSpawnChance: Double,
+                               outflowSpawnChance: Double,
                                cannonSpawnChance: Double,
-                               humanInitialSignal: Signal,
-                               escapeInitialSignal: Signal,
+                               waterInitialSignal: Signal,
+                               outflowInitialSignal: Signal,
                                cannonInitialSignal: Signal,
                                guiType: GuiType,
                                guiCellSize: Int,

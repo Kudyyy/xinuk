@@ -14,16 +14,16 @@ object WaterMain extends LazyLogging {
   private val metricHeaders = Vector()
 
   private def cellToColorRegions(cell: SmellingCell): Color = {
-    val smellValue = cell.smell.map(_.map(_.value).max).max.toFloat
-    val brightness = Math.pow(smellValue, 0.1).toFloat
+    val smellValue = (cell.smell.map(_.map(_.value).sum).sum/(cell.smell.length * cell.smell.length)).toFloat
+    val brightness = Math.pow(math.abs(smellValue), 0.1).toFloat
     if (smellValue < 0) Color.getHSBColor(1f, 1f, brightness) else Color.getHSBColor(0.7f, 0.5f, brightness)
   }
 
   private def cellToColor(cell: SmellingCell): Color = {
     cell match {
-      case WaterCell(_, _, _) => Color.BLUE
-      case CannonCell(_) => Color.RED //cellToColorRegions(cell, 0.7f)
-      case OutflowCell(_) => new Color(139, 69, 19)
+      case WaterCell(_, _) => Color.BLUE
+      case CannonCell(_) => Color.YELLOW
+      case OutflowCell(_) => Color.RED
       case cell: SmellingCell => cellToColorRegions(cell)
     }
   }

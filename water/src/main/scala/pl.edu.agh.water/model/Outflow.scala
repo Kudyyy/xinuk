@@ -11,13 +11,13 @@ final case class OutflowCell(smell: SmellArray) extends SmellingCell {
 }
 
 trait OutflowAccessible[+T <: GridPart] {
-  def withEscape(): T
+  def withOutflow(): T
 }
 object OutflowAccessible {
 
   def unapply(arg: EmptyCell)(implicit config: WaterConfig): OutflowAccessible[OutflowCell] =
     new OutflowAccessible[OutflowCell] {
-      override def withEscape(): OutflowCell = OutflowCell(arg.smellWith(config.outflowInitialSignal))
+      override def withOutflow(): OutflowCell = OutflowCell(arg.smellWith(config.outflowInitialSignal))
     }
 
   def unapply(arg: GridPart)(implicit config: WaterConfig): Option[OutflowAccessible[GridPart]] = arg match {

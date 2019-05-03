@@ -16,12 +16,16 @@ object WaterConflictResolver extends ConflictResolver[WaterConfig] {
         (incomingCell.withSmell(incomingCell.smell + currentSmell), WaterMetrics.empty())
       case (currentCell: SmellingCell, EmptyCell(incomingSmell)) =>
         (currentCell.withSmell(currentCell.smell + incomingSmell), WaterMetrics.empty())
-      case (OutflowCell(currentSmell), WaterCell(_, _, _)) =>
+      case (OutflowCell(currentSmell), WaterCell(_, _)) =>
         (OutflowCell(currentSmell), WaterMetrics.empty())
-      case (CannonCell(currentSmell), WaterCell(_, _, _)) =>
+      case (WaterCell(_, _), OutflowCell(currentSmell)) =>
+        (OutflowCell(currentSmell), WaterMetrics.empty())
+      case (CannonCell(currentSmell), WaterCell(_, _)) =>
         (CannonCell(currentSmell), WaterMetrics.empty())
-      case (WaterCell(currentSmell, currentCrowd, currentSpeed), another@WaterCell(incomingSmell, incomingCrowd, _)) =>
-        (WaterCell(currentSmell + incomingSmell, currentCrowd ++ incomingCrowd ++ List(another), currentSpeed), WaterMetrics.empty())
+      case (WaterCell(_, _), CannonCell(currentSmell)) =>
+        (CannonCell(currentSmell), WaterMetrics.empty())
+      case (WaterCell(currentSmell, currentSpeed), WaterCell(incomingSmell, _)) =>
+        (WaterCell(currentSmell + incomingSmell, currentSpeed), WaterMetrics.empty())
       case (Obstacle, _) => (Obstacle, WaterMetrics.empty())
       case (x, y) => throw new UnsupportedOperationException(s"Unresolved conflict: $x with $y")
     }

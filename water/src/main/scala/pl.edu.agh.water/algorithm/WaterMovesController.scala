@@ -19,6 +19,7 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
 
   override def initialGrid: (Grid, WaterMetrics) = {
     val grid = Grid.empty(bufferZone)
+    var waterCount = 0L
     var spawnedEs = false
     var spawnedFi = false
     for {
@@ -30,6 +31,7 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
           random.nextInt(4) match {
             case 0 =>
               if (random.nextDouble() < config.waterSpawnChance) {
+                waterCount += 1
                 val speed = random.nextInt(config.waterMaxSpeed) + 1
                 WaterAccessible.unapply(EmptyCell.Instance).withWater(speed)
               } else {
@@ -63,7 +65,8 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
       }
     }
 
-    (grid, WaterMetrics.empty())
+    val metrics = WaterMetrics(waterCount)
+    (grid, metrics)
   }
 
 
@@ -96,6 +99,7 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
 
   override def makeMoves(iteration: Long, grid: Grid): (Grid, WaterMetrics) = {
     val newGrid = Grid.empty(bufferZone)
+    var waterCount = 0L
 
     def isEmptyIn(grid: Grid)(i: Int, j: Int): Boolean = {
       grid.cells(i)(j) match {
@@ -160,8 +164,17 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
     for {
       x <- 0 until config.gridSize
       y <- 0 until config.gridSize
-    } makeMove(x, y)
+    }
+      {
+        grid.cells(x)(y) match {
+          case WaterCell(_, _) =>
+            waterCount += 1
+          case _ =>
+        }
+        makeMove(x, y)
+      }
 
-    (newGrid, WaterMetrics.empty())
+    val metrics = WaterMetrics(waterCount)
+    (newGrid, metrics)
   }
 }

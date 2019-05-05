@@ -5,9 +5,9 @@ import java.awt.Color
 import com.typesafe.scalalogging.LazyLogging
 import pl.edu.agh.water.algorithm.WaterMovesController
 import pl.edu.agh.water.model.parallel.WaterConflictResolver
-import pl.edu.agh.water.model.{OutflowCell, WaterCell, CannonCell}
+import pl.edu.agh.water.model.{CannonCell, OutflowCell, WaterCell}
 import pl.edu.agh.xinuk.Simulation
-import pl.edu.agh.xinuk.model.{DefaultSmellPropagation, SmellingCell}
+import pl.edu.agh.xinuk.model.{DefaultSmellPropagation, Obstacle, SmellingCell}
 
 object WaterMain extends LazyLogging {
   private val configPrefix = "water"
@@ -32,7 +32,10 @@ object WaterMain extends LazyLogging {
     import pl.edu.agh.xinuk.config.ValueReaders._
     new Simulation(configPrefix, metricHeaders, WaterConflictResolver,
       DefaultSmellPropagation.calculateSmellAddendsStandard)(new WaterMovesController(_)(_),
-      { case cell: SmellingCell => cellToColor(cell) }
+      {
+        case cell: SmellingCell => cellToColor(cell)
+        case Obstacle => Color.WHITE
+      }
     ).start()
   }
 

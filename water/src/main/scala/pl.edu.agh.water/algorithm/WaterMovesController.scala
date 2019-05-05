@@ -11,6 +11,7 @@ import pl.edu.agh.xinuk.model._
 
 import scala.collection.immutable.TreeSet
 import scala.util.Random
+import scala.math.min
 
 final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit config: WaterConfig) extends MovesController {
 
@@ -21,13 +22,12 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
     var spawnedEs = false
     var spawnedFi = false
     for {
-      x <- 0 until config.gridSize
-      y <- 0 until config.gridSize
-      if x != 0 && y != 0 && x != config.gridSize - 1 && y != config.gridSize - 1
+      x <- 1 until config.gridSize - 1
+      y <- 1 until config.gridSize - 1
     } {
-      if (random.nextDouble() < config.spawnChance) {
+      if (random.nextDouble() < config.spawnChance && grid.cells(x)(y).isInstanceOf[EmptyCell]) {
         grid.cells(x)(y) =
-          random.nextInt(3) match {
+          random.nextInt(4) match {
             case 0 =>
               if (random.nextDouble() < config.waterSpawnChance) {
                 val speed = random.nextInt(config.waterMaxSpeed) + 1
@@ -49,9 +49,20 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
               } else {
                 grid.cells(x)(y)
               }
+            case 3 =>
+              if (random.nextDouble() < config.obstacleSpawnChance) {
+                for {
+                  i <- x until min(x + config.heightOfObstacle, config.gridSize - 1)
+                  j <- y until min(y + config.widthOfObstacle, config.gridSize - 1)
+                } grid.cells(i)(j) = Obstacle
+                Obstacle
+              } else {
+                grid.cells(x)(y)
+              }
           }
       }
     }
+
     (grid, WaterMetrics.empty())
   }
 

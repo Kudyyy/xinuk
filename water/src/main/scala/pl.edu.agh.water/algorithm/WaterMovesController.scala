@@ -21,8 +21,8 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
   override def initialGrid: (Grid, WaterMetrics) = {
     val grid = Grid.empty(bufferZone)
     var waterCount = 0L
-    var spawnedEs = false
-    var spawnedFi = false
+    var numberOfOutflows = 0
+    var numberOfCannons = 0
     for {
       x <- 1 until config.gridSize - 1
       y <- 1 until config.gridSize - 1
@@ -39,15 +39,15 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
                 grid.cells(x)(y)
               }
             case 1 =>
-              if (random.nextDouble() < config.outflowSpawnChance && !spawnedEs) {
-                spawnedEs = true
+              if (random.nextDouble() < config.outflowSpawnChance && numberOfOutflows < config.numberOfOutflows) {
+                numberOfOutflows += 1
                 OutflowAccessible.unapply(EmptyCell.Instance).withOutflow()
               } else {
                 grid.cells(x)(y)
               }
             case 2 =>
-              if (random.nextDouble() < config.cannonSpawnChance && !spawnedFi) {
-                spawnedFi = true
+              if (random.nextDouble() < config.cannonSpawnChance && numberOfCannons < config.numberOfCannons) {
+                numberOfCannons += 1
                 CannonAccessible.unapply(EmptyCell.Instance).withCannon()
               } else {
                 grid.cells(x)(y)

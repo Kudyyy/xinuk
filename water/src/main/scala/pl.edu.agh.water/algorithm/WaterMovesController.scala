@@ -143,19 +143,15 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
             newGrid.cells(x)(y) = CannonAccessible.unapply(EmptyCell.Instance).withCannon()
           }
         case cell: WaterCell =>
-          if (Random.nextDouble() < 0.1) {
-            newGrid.cells(x)(y) = EmptyCell(cell.smell)
-          }
-          else {
-            newGrid.cells(x)(y) match {
-              case _ => if (iteration % cell.speed == 0 &&
-                            math.abs(cell.smell.map(_.map(_.value).sum).sum/(cell.smell.length * cell.smell.length)) > 0.000000001) {
-                moveWater(cell, x, y)
-              } else {
-                stayInPlace(cell, x, y)
-              }
+          newGrid.cells(x)(y) match {
+            case _ => if (iteration % cell.speed == 0 &&
+                          math.abs(cell.smell.map(_.map(_.value).sum).sum/(cell.smell.length * cell.smell.length)) > 0.000000001) {
+              moveWater(cell, x, y)
+            } else {
+              stayInPlace(cell, x, y)
             }
           }
+
         case cell@NetCell(_, _) =>
           if (isEmptyIn(newGrid)(x, y)) {
             newGrid.cells(x)(y) = cell.withSmell(cell.smell * config.obstacleSuppressionFactor)

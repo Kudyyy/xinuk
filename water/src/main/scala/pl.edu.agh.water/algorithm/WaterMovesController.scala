@@ -131,8 +131,7 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
           newGrid.cells(x)(y) = Obstacle
         case cell@(EmptyCell(_) | BufferCell(_)) =>
           if (isEmptyIn(newGrid)(x, y)) {
-            if (Random.nextDouble() < 0.005) newGrid.cells(x)(y) = WaterAccessible.unapply(EmptyCell.Instance).withWater(random.nextInt(config.waterMaxSpeed) + 1)
-            else newGrid.cells(x)(y) = cell
+             newGrid.cells(x)(y) = cell
           }
         case OutflowCell(_) =>
           if (isEmptyIn(newGrid)(x, y)) {
@@ -140,6 +139,13 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
           }
         case CannonCell(_) =>
           if (isEmptyIn(newGrid)(x, y)) {
+            if (Random.nextDouble() < config.waterSpreadOutFromCannonFrequency) {
+              for {
+                i <- -1 to 1
+                j <- -1 to 1
+              } if (grid.cells(x + i)(y + j).isInstanceOf[EmptyCell])
+                  newGrid.cells(x + i)(y + j) = WaterAccessible.unapply(EmptyCell.Instance).withWater(random.nextInt(config.waterMaxSpeed) + 1)
+            }
             newGrid.cells(x)(y) = CannonAccessible.unapply(EmptyCell.Instance).withCannon()
           }
         case cell: WaterCell =>

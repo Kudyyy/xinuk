@@ -13,6 +13,7 @@ final case class WaterConfig(
                                waterSpawnChance: Double,
                                outflowSpawnChance: Double,
                                cannonSpawnChance: Double,
+                               waterSpreadOutFromCannonFrequency: Double,
                                obstacleSpawnChance: Double,
                                widthOfObstacle: Int,
                                obstacleSuppressionFactor: Double,

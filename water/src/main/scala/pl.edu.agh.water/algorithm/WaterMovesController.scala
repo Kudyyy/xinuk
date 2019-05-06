@@ -39,14 +39,14 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
                 grid.cells(x)(y)
               }
             case 1 =>
-              if (config.gridSize/2 > x && random.nextDouble() < config.outflowSpawnChance && !spawnedEs) {
+              if (random.nextDouble() < config.outflowSpawnChance && !spawnedEs) {
                 spawnedEs = true
                 OutflowAccessible.unapply(EmptyCell.Instance).withOutflow()
               } else {
                 grid.cells(x)(y)
               }
             case 2 =>
-              if (config.gridSize/2 < x && random.nextDouble() < config.cannonSpawnChance && !spawnedFi) {
+              if (random.nextDouble() < config.cannonSpawnChance && !spawnedFi) {
                 spawnedFi = true
                 CannonAccessible.unapply(EmptyCell.Instance).withCannon()
               } else {

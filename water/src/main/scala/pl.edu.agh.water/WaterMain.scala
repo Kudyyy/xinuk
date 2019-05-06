@@ -35,7 +35,6 @@ object WaterMain extends LazyLogging {
       DefaultSmellPropagation.calculateSmellAddendsStandard)(new WaterMovesController(_)(_),
       {
         case cell: SmellingCell => cellToColor(cell)
-        case Obstacle => Color.WHITE
       }
     ).start()
   }

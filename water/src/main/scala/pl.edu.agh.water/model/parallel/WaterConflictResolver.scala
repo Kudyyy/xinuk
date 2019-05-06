@@ -1,7 +1,7 @@
 package pl.edu.agh.water.model.parallel
 
 import pl.edu.agh.water.config.WaterConfig
-import pl.edu.agh.water.model.{OutflowCell, WaterCell, CannonCell}
+import pl.edu.agh.water.model.{CannonCell, OutflowCell, WaterCell, WindCell}
 import pl.edu.agh.water.simulation.WaterMetrics
 import pl.edu.agh.xinuk.model._
 import pl.edu.agh.xinuk.model.parallel.ConflictResolver
@@ -24,6 +24,10 @@ object WaterConflictResolver extends ConflictResolver[WaterConfig] {
         (CannonCell(currentSmell), WaterMetrics.empty())
       case (WaterCell(_, _), CannonCell(currentSmell)) =>
         (CannonCell(currentSmell), WaterMetrics.empty())
+      case (WindCell(currentSmell), WaterCell(_, _)) =>
+        (WindCell(currentSmell), WaterMetrics.empty())
+      case (WaterCell(_, _), WindCell(currentSmell)) =>
+        (WindCell(currentSmell), WaterMetrics.empty())
       case (WaterCell(currentSmell, currentSpeed), WaterCell(incomingSmell, _)) =>
         (WaterCell(currentSmell + incomingSmell, currentSpeed), WaterMetrics.empty())
       case (Obstacle, _) => (Obstacle, WaterMetrics.empty())

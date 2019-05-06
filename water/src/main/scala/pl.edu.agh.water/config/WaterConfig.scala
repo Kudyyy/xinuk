@@ -23,10 +23,12 @@ final case class WaterConfig(
                                waterInitialSignal: Signal,
                                outflowInitialSignal: Signal,
                                cannonInitialSignal: Signal,
+                               windInitialSignal: Signal,
                                guiType: GuiType,
                                guiCellSize: Int,
                                workersRoot: Int,
                                iterationsNumber: Long,
                                isSupervisor: Boolean,
-                               shardingMod: Int
+                               shardingMod: Int,
+                               spawnWind: Boolean
                              ) extends XinukConfig

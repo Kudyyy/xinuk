@@ -5,7 +5,7 @@ import java.awt.Color
 import com.typesafe.scalalogging.LazyLogging
 import pl.edu.agh.water.algorithm.WaterMovesController
 import pl.edu.agh.water.model.parallel.WaterConflictResolver
-import pl.edu.agh.water.model.{CannonCell, OutflowCell, WaterCell}
+import pl.edu.agh.water.model.{CannonCell, NetCell, OutflowCell, WaterCell}
 import pl.edu.agh.xinuk.Simulation
 import pl.edu.agh.xinuk.model.{DefaultSmellPropagation, Obstacle, SmellingCell}
 
@@ -24,6 +24,7 @@ object WaterMain extends LazyLogging {
       case WaterCell(_, _) => Color.BLUE
       case CannonCell(_) => Color.YELLOW
       case OutflowCell(_) => Color.RED
+      case NetCell(_,_) => Color.WHITE
       case cell: SmellingCell => cellToColorRegions(cell)
     }
   }

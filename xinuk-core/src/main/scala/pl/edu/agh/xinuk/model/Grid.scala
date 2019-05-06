@@ -123,6 +123,11 @@ object Cell {
     def +(added: Signal): SmellArray = {
       Array.tabulate(Cell.Size, Cell.Size)((i, j) => arr(i)(j) + added)
     }
+
+    def *(added: Double): SmellArray = {
+      Array.tabulate(Cell.Size, Cell.Size)((i, j) => arr(i)(j) * added)
+    }
+
   }
 
   final val Size: Int = 3

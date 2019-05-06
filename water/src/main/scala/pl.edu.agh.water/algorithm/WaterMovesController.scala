@@ -12,6 +12,7 @@ import pl.edu.agh.xinuk.model._
 import scala.collection.immutable.TreeSet
 import scala.util.Random
 import scala.math.min
+import pl.edu.agh.xinuk.model.Cell.SmellArrayOps
 
 final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit config: WaterConfig) extends MovesController {
 
@@ -56,8 +57,8 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
                 for {
                   i <- x until min(x + config.heightOfObstacle, config.gridSize - 1)
                   j <- y until min(y + config.widthOfObstacle, config.gridSize - 1)
-                } grid.cells(i)(j) = Obstacle
-                Obstacle
+                } grid.cells(i)(j) = NetAccessible.unapply(EmptyCell.Instance).withNet(0)
+                NetAccessible.unapply(EmptyCell.Instance).withNet(0)
               } else {
                 grid.cells(x)(y)
               }
@@ -154,6 +155,10 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
                 stayInPlace(cell, x, y)
               }
             }
+          }
+        case cell@NetCell(_, _) =>
+          if (isEmptyIn(newGrid)(x, y)) {
+            newGrid.cells(x)(y) = cell.withSmell(cell.smell * config.obstacleSuppressionFactor)
           }
       }
     }

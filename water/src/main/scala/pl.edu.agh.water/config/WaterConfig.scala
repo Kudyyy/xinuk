@@ -15,6 +15,7 @@ final case class WaterConfig(
                                cannonSpawnChance: Double,
                                obstacleSpawnChance: Double,
                                widthOfObstacle: Int,
+                               obstacleSuppressionFactor: Double,
                                heightOfObstacle: Int,
                                waterInitialSignal: Signal,
                                outflowInitialSignal: Signal,

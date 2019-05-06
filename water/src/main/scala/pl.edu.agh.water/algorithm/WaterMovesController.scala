@@ -72,18 +72,34 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
 
   def calculatePossibleDestinations(cell: WaterCell, x: Int, y: Int, grid: Grid): Iterator[(Int, Int, GridPart)] = {
     val neighbourCellCoordinates = Grid.neighbourCellCoordinates(x, y)
-    Grid.SubcellCoordinates
+    var minus = false
+    val values = Grid.SubcellCoordinates
       .map {
-        case (i, j) => cell.smell(i)(j)
+        case (i, j) => {
+          if (cell.smell(i)(j).value < 0.0)
+            minus = true
+          cell.smell(i)(j)
+        }
       }
       .zipWithIndex
-      .sorted(implicitly[Ordering[(Signal, Int)]].reverse)
-      .iterator
-      .map {
-        case (_, idx) =>
-          val (i, j) = neighbourCellCoordinates(idx)
-          (i, j, grid.cells(i)(j))
-      }
+    if (minus){
+      values.sorted(implicitly[Ordering[(Signal, Int)]])
+        .iterator
+        .map {
+          case (_, idx) =>
+            val (i, j) = neighbourCellCoordinates.reverse(idx)
+            (i, j, grid.cells(i)(j))
+        }
+    }
+    else {
+      values.sorted(implicitly[Ordering[(Signal, Int)]].reverse)
+        .iterator
+        .map {
+          case (_, idx) =>
+            val (i, j) = neighbourCellCoordinates(idx)
+            (i, j, grid.cells(i)(j))
+        }
+    }
   }
 
   def selectDestinationCell(possibleDestinations: Iterator[(Int, Int, GridPart)], newGrid: Grid): commons.Opt[(Int, Int, GridPart)] = {

@@ -155,7 +155,7 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
         case cell: WaterCell =>
           newGrid.cells(x)(y) match {
             case _ => if (iteration % cell.speed == 0 &&
-                          math.abs(cell.smell.map(_.map(_.value).sum).sum/(cell.smell.length * cell.smell.length)) > 0.000000001) {
+                          math.abs(cell.smell.map(_.map(_.value).sum).sum/(cell.smell.length * cell.smell.length)) > 0.000000000000001) {
               moveWater(cell, x, y)
             } else {
               stayInPlace(cell, x, y)
@@ -180,8 +180,10 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
       val destination = selectDestinationCell(destinations, newGrid)
 
       destination match {
-        case Opt((i, j, WaterAccessible(dst))) =>
+        case Opt((i, j, WaterAccessible(dst))) => {
           newGrid.cells(i)(j) = dst.withWater(cell.speed)
+          newGrid.cells(x)(y) = EmptyCell(cell.smell)
+        }
         case Opt((i, j, inaccessibleDestination)) =>
           throw new RuntimeException(s"Water selected inaccessible destination ($i,$j): $inaccessibleDestination")
         case Opt.Empty =>

@@ -94,34 +94,21 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
 
   def calculatePossibleDestinations(cell: WaterCell, x: Int, y: Int, grid: Grid): Iterator[(Int, Int, GridPart)] = {
     val neighbourCellCoordinates = Grid.neighbourCellCoordinates(x, y)
-    var minus = false
-    val values = Grid.SubcellCoordinates
-      .map {
-        case (i, j) => {
-          if (cell.smell(i)(j).value < 0.0)
-            minus = true
-          cell.smell(i)(j)
-        }
-      }
-      .zipWithIndex
-    if (minus){
-      values.sorted(implicitly[Ordering[(Signal, Int)]])
-        .iterator
-        .map {
-          case (_, idx) =>
-            val (i, j) = neighbourCellCoordinates.reverse(idx)
-            (i, j, grid.cells(i)(j))
-        }
-    }
-    else {
-      values.sorted(implicitly[Ordering[(Signal, Int)]].reverse)
-        .iterator
-        .map {
-          case (_, idx) =>
-            val (i, j) = neighbourCellCoordinates(idx)
-            (i, j, grid.cells(i)(j))
-        }
-    }
+    val idxMap = Grid.SubcellCoordinates.zip(neighbourCellCoordinates).toMap
+    def getAngle(x: Double, y: Double): Double = math.atan(math.abs(x)/math.abs(y)) * (180/math.Pi)
+    val vec = Grid.SubcellCoordinates
+      .foldLeft((Double.MinPositiveValue, Double.MinPositiveValue)) ((acc, cord) => {
+        (acc._1 + ((cord._1 - 1) * cell.smell(cord._1)(cord._2).value),
+         acc._2 + ((cord._2 - 1) * cell.smell(cord._1)(cord._2).value))
+      })
+
+    val angle = getAngle(vec._1, vec._2)
+    val v1 = if (angle > 30.0) 1 else 0
+    val v2 = if (angle < 60.0) 1 else 0
+    val v11 = if (vec._1 < 0.0) 1 - v1 else 1 + v1
+    val v22 = if (vec._2 < 0.0) 1 - v2 else 1 + v2
+    val (i, j) = idxMap((v11, v22))
+    Iterator((i, j, grid.cells(i)(j)))
   }
 
   def selectDestinationCell(possibleDestinations: Iterator[(Int, Int, GridPart)], newGrid: Grid): commons.Opt[(Int, Int, GridPart)] = {

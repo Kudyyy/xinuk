@@ -92,25 +92,6 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
   }
 
 
-  def calculatePossibleDestinations(cell: WaterCell, x: Int, y: Int, grid: Grid): Iterator[(Int, Int, GridPart)] = {
-    val neighbourCellCoordinates = Grid.neighbourCellCoordinates(x, y)
-    val idxMap = Grid.SubcellCoordinates.zip(neighbourCellCoordinates).toMap
-    def getAngle(x: Double, y: Double): Double = math.atan(math.abs(x)/math.abs(y)) * (180/math.Pi)
-    val vec = Grid.SubcellCoordinates
-      .foldLeft((Double.MinPositiveValue, Double.MinPositiveValue)) ((acc, cord) => {
-        (acc._1 + ((cord._1 - 1) * cell.smell(cord._1)(cord._2).value),
-         acc._2 + ((cord._2 - 1) * cell.smell(cord._1)(cord._2).value))
-      })
-
-    val angle = getAngle(vec._1, vec._2)
-    val v1 = if (angle > 30.0) 1 else 0
-    val v2 = if (angle < 60.0) 1 else 0
-    val v11 = if (vec._1 < 0.0) 1 - v1 else 1 + v1
-    val v22 = if (vec._2 < 0.0) 1 - v2 else 1 + v2
-    val (i, j) = idxMap((v11, v22))
-    Iterator((i, j, grid.cells(i)(j)))
-  }
-
   def selectDestinationCell(possibleDestinations: Iterator[(Int, Int, GridPart)], newGrid: Grid): commons.Opt[(Int, Int, GridPart)] = {
     possibleDestinations
       .map {
@@ -125,6 +106,69 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
   override def makeMoves(iteration: Long, grid: Grid): (Grid, WaterMetrics) = {
     val newGrid = Grid.empty(bufferZone)
     var waterCount = 0L
+
+    def calculatePossibleDestinations(cell: WaterCell, x: Int, y: Int, grid: Grid): Iterator[(Int, Int, GridPart)] = {
+      val neighbourCellCoordinates = Grid.neighbourCellCoordinates(x, y)
+      val idxMap = Grid.SubcellCoordinates.zip(neighbourCellCoordinates).toMap
+      def getAngle(x: Double, y: Double): Double = math.atan(math.abs(x)/math.abs(y)) * (180/math.Pi)
+      def randomness(x: Int, y: Int): (Int, Int) = {
+        if (Random.nextDouble() < 0.3){
+          if (x == 1){
+            if (Random.nextDouble() < 0.5) (0, y)
+            else (2, y)
+          }
+          else if (y == 1){
+            if (Random.nextDouble() < 0.5) (x, 0)
+            else (x, 2)
+          }
+          else{
+            val x_n = 1 - x
+            val y_n = 1 - y
+            if (Random.nextDouble() < 0.5) (x, y + y_n)
+            else (x + x_n, y)
+          }
+        }
+        else (x, y)
+      }
+
+      def collisionChecker(x: Int, y: Int, dst_x: Int, dst_y: Int): (Int, Int) = {
+         grid.cells(dst_x)(dst_y) match {
+           case cell: WaterCell =>{
+            if (x == 1){
+              if (Random.nextDouble() < 0.5) (0, x)
+              else (2, x)
+            }
+            else if (y == 1){
+              if (Random.nextDouble() < 0.5) (y, 0)
+              else (y, 2)
+            }
+            else{
+              val x_n = 1 - x
+              if (Random.nextDouble() < 0.5) (x, x + 2 * x_n)
+              else (x + 2 * x_n, y)
+            }
+          }
+          case _ => (x, y)
+        }
+      }
+
+
+      val vec = Grid.SubcellCoordinates
+        .foldLeft((Double.MinPositiveValue, Double.MinPositiveValue)) ((acc, cord) => {
+          (acc._1 + ((cord._1 - 1) * cell.smell(cord._1)(cord._2).value),
+            acc._2 + ((cord._2 - 1) * cell.smell(cord._1)(cord._2).value))
+        })
+
+      val angle = getAngle(vec._1, vec._2)
+      val v1 = if (angle > 30.0) 1 else 0
+      val v2 = if (angle < 60.0) 1 else 0
+      val v11 = if (vec._1 < 0.0) 1 - v1 else 1 + v1
+      val v22 = if (vec._2 < 0.0) 1 - v2 else 1 + v2
+      val (i, j) = idxMap(v11, v22)
+      val (res_i, res_j) = collisionChecker(v11, v22, i, j)
+      val (dst_i, dst_j) = idxMap(randomness(res_i, res_j))
+      Iterator((dst_i, dst_j, grid.cells(dst_i)(dst_j)))
+    }
 
     def isEmptyIn(grid: Grid)(i: Int, j: Int): Boolean = {
       grid.cells(i)(j) match {

@@ -12,6 +12,7 @@ import pl.edu.agh.xinuk.model.{DefaultSmellPropagation, SmellingCell}
 object WaterMain extends LazyLogging {
   private val configPrefix = "water"
   private val metricHeaders = Vector()
+  var windPosition: Int = -1
 
   private def cellToColorRegions(cell: SmellingCell): Color = {
     val smellValue = (cell.smell.map(_.map(_.value).sum).sum/(cell.smell.length * cell.smell.length)).toFloat

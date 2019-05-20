@@ -3,6 +3,7 @@ package pl.edu.agh.water.algorithm
 import com.avsystem.commons
 import com.avsystem.commons.SharedExtensions._
 import com.avsystem.commons.misc.Opt
+import pl.edu.agh.water.WaterMain
 import pl.edu.agh.water.config.WaterConfig
 import pl.edu.agh.water.model._
 import pl.edu.agh.water.simulation.WaterMetrics
@@ -67,23 +68,41 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
     }
 
     if (config.spawnWind) {
-      random.nextInt(4) match {
+      if (WaterMain.windPosition < 0)
+        WaterMain.windPosition = random.nextInt(4)
+      WaterMain.windPosition match {
         case 0 =>
-          for {
-            x <- 1 until config.gridSize - 1
-          } grid.cells(x)(1) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+          grid.cells(1)(0) match {
+            case Obstacle =>
+              for {
+                x <- 1 until config.gridSize - 1
+              } grid.cells(x)(1) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+            case _ =>
+          }
         case 1 =>
-          for {
-            y <- 1 until config.gridSize - 1
-          } grid.cells(1)(y) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+          grid.cells(0)(1) match {
+            case Obstacle =>
+              for {
+                y <- 1 until config.gridSize - 1
+            } grid.cells(1)(y) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+            case _ =>
+          }
         case 2 =>
-          for {
-            x <- 1 until config.gridSize - 1
-          } grid.cells(x)(config.gridSize - 2) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+          grid.cells(1)(config.gridSize - 1) match {
+            case Obstacle =>
+              for {
+                x <- 1 until config.gridSize - 1
+              } grid.cells(x)(config.gridSize - 2) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+            case _ =>
+          }
         case 3 =>
-          for {
-            y <- 1 until config.gridSize - 1
-          } grid.cells(config.gridSize - 2)(y) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+          grid.cells(config.gridSize - 1)(1) match {
+            case Obstacle =>
+              for {
+                y <- 1 until config.gridSize - 1
+              } grid.cells(config.gridSize - 2)(y) = WindAccessible.unapply(EmptyCell.Instance).withWind()
+            case _ =>
+          }
       }
     }
 

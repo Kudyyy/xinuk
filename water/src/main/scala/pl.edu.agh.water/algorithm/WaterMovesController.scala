@@ -112,16 +112,16 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
       val idxMap = Grid.SubcellCoordinates.zip(neighbourCellCoordinates).toMap
       def getAngle(x: Double, y: Double): Double = math.atan(math.abs(x)/math.abs(y)) * (180/math.Pi)
       def randomness(x: Int, y: Int): (Int, Int) = {
-        if (Random.nextDouble() < 0.3){
-          if (x == 1){
+        if (Random.nextDouble() < config.chanceOfRandomWaterMove) {
+          if (x == 1) {
             if (Random.nextDouble() < 0.5) (0, y)
             else (2, y)
           }
-          else if (y == 1){
+          else if (y == 1) {
             if (Random.nextDouble() < 0.5) (x, 0)
             else (x, 2)
           }
-          else{
+          else {
             val x_n = 1 - x
             val y_n = 1 - y
             if (Random.nextDouble() < 0.5) (x, y + y_n)
@@ -133,25 +133,27 @@ final class WaterMovesController(bufferZone: TreeSet[(Int, Int)])(implicit confi
 
       def collisionChecker(x: Int, y: Int, dst_x: Int, dst_y: Int): (Int, Int) = {
          grid.cells(dst_x)(dst_y) match {
-           case cell: WaterCell =>{
-            if (x == 1){
-              if (Random.nextDouble() < 0.5) (0, x)
-              else (2, x)
-            }
-            else if (y == 1){
-              if (Random.nextDouble() < 0.5) (y, 0)
-              else (y, 2)
-            }
-            else{
-              val x_n = 1 - x
-              if (Random.nextDouble() < 0.5) (x, x + 2 * x_n)
-              else (x + 2 * x_n, y)
-            }
-          }
-          case _ => (x, y)
+           case _: WaterCell => randNearCoordinates(x, y)
+           case _: NetCell => randNearCoordinates(x, y)
+           case _ => (x, y)
         }
       }
 
+      def randNearCoordinates(x: Int, y: Int): (Int, Int) = {
+        if (x == 1) {
+          if (Random.nextDouble() < 0.5) (0, x)
+          else (2, x)
+        }
+        else if (y == 1) {
+          if (Random.nextDouble() < 0.5) (y, 0)
+          else (y, 2)
+        }
+        else {
+          val x_n = 1 - x
+          if (Random.nextDouble() < 0.5) (x, x + 2 * x_n)
+          else (x + 2 * x_n, y)
+        }
+      }
 
       val vec = Grid.SubcellCoordinates
         .foldLeft((Double.MinPositiveValue, Double.MinPositiveValue)) ((acc, cord) => {

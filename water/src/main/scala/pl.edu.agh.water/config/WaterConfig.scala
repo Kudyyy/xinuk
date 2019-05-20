@@ -30,5 +30,6 @@ final case class WaterConfig(
                                iterationsNumber: Long,
                                isSupervisor: Boolean,
                                shardingMod: Int,
-                               spawnWind: Boolean
+                               spawnWind: Boolean,
+                               chanceOfRandomWaterMove: Double
                              ) extends XinukConfig

@@ -1,7 +1,7 @@
 package pl.edu.agh.water.model.parallel
 
 import pl.edu.agh.water.config.WaterConfig
-import pl.edu.agh.water.model.{CannonCell, OutflowCell, WaterCell, WindCell}
+import pl.edu.agh.water.model.{CannonCell, NetCell, OutflowCell, WaterCell, WindCell}
 import pl.edu.agh.water.simulation.WaterMetrics
 import pl.edu.agh.xinuk.model._
 import pl.edu.agh.xinuk.model.parallel.ConflictResolver
@@ -31,6 +31,8 @@ object WaterConflictResolver extends ConflictResolver[WaterConfig] {
       case (WaterCell(currentSmell, currentSpeed), WaterCell(incomingSmell, _)) =>
         (WaterCell(currentSmell + incomingSmell, currentSpeed), WaterMetrics.empty())
       case (Obstacle, _) => (Obstacle, WaterMetrics.empty())
+      case (NetCell(currentSmell, currentSpeed), WaterCell(incomingSmell, _)) =>
+        (NetCell(currentSmell + incomingSmell, currentSpeed), WaterMetrics.empty())
       case (x, y) => throw new UnsupportedOperationException(s"Unresolved conflict: $x with $y")
     }
   }
